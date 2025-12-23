@@ -24,7 +24,7 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             margin: 0;
-            padding: 0 20px 20px 20px;
+            padding: 0 20px 40px 20px; /* Added bottom padding for scrolling */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -244,13 +244,13 @@
         </div>
     </div>
 
-    <h3 class="section-header">Taxpayer Waste (Everyone pays this)</h3>
-    <div id="mandatory-container" class="cards-grid"></div>
-
     <h3 class="section-header">Select what applies to you:</h3>
     <div id="cards-container" class="cards-grid">
         <p style="color: red;">⚠️ Loading options... Ensure 'cards.js' is in the same folder.</p>
     </div>
+
+    <h3 class="section-header">Taxpayer Waste (Everyone pays this)</h3>
+    <div id="mandatory-container" class="cards-grid"></div>
 </div>
 
 <script src="cards.js"></script>
@@ -258,7 +258,6 @@
 <script>
     // --- GLOBAL STATE ---
     let currentTotal = 0;
-    // Updated average to reflect new mandatory items
     const AVERAGE_LOSS_AMT = 3750; 
 
     // --- LOGIC ---
@@ -295,7 +294,7 @@
     }
 
     function renderMandatory() {
-        if (typeof mandatoryCards === 'undefined') return; // Safety check
+        if (typeof mandatoryCards === 'undefined') return; 
         
         els.mandatoryGrid.innerHTML = '';
         mandatoryCards.forEach(card => {
@@ -311,7 +310,7 @@
     }
 
     function renderOptions() {
-        if (typeof cards === 'undefined') return; // Safety check
+        if (typeof cards === 'undefined') return; 
 
         els.grid.innerHTML = '';
         cards.forEach(card => {
@@ -333,7 +332,6 @@
     }
 
     function calculateTotal() {
-        // Safety check for data loading
         if (typeof mandatoryCards === 'undefined' || typeof cards === 'undefined') return;
 
         // --- GAINS ---
@@ -405,11 +403,26 @@
     // Listeners
     els.income.addEventListener('input', (e) => { state.income = Number(e.target.value); calculateTotal(); });
     els.cars.addEventListener('input', (e) => { state.cars = Number(e.target.value); calculateTotal(); });
-    els.children.addEventListener('input', (e) => { state.children = Number(e.target.value); calculateTotal(); });
+    
+    // NEW LOGIC: Deselect child-based cards if children = 0
+    els.children.addEventListener('input', (e) => { 
+        state.children = Number(e.target.value);
+        
+        if (state.children === 0 && typeof cards !== 'undefined') {
+            cards.forEach(card => {
+                // If the card relies on kids and is selected, unselect it
+                if (card.isPerChild && state.selectedIds.has(card.id)) {
+                    state.selectedIds.delete(card.id);
+                }
+            });
+            renderOptions(); // Re-render to show visual unselection
+        }
+        
+        calculateTotal(); 
+    });
 
     // Start
     window.addEventListener('load', () => {
-        // We use 'load' to ensure cards.js is ready
         renderMandatory();
         renderOptions();
         calculateTotal();
