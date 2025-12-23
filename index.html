@@ -15,6 +15,7 @@
             --accent-red: #f44336;
             --accent-orange: #ff9800;
             --accent-blue: #2196F3;
+            --link-color: #64b5f6;
             --border-color: #333;
         }
 
@@ -91,19 +92,9 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-
-        .share-btn:hover {
-            transform: scale(1.05);
-            background-color: #1976D2;
-        }
-
+        .share-btn:hover { transform: scale(1.05); background-color: #1976D2; }
         .share-btn:active { transform: scale(0.95); }
-
-        /* State when copied */
-        .share-btn.copied {
-            background-color: white;
-            color: var(--bg-color);
-        }
+        .share-btn.copied { background-color: white; color: var(--bg-color); }
 
         /* Average Message */
         #average-msg {
@@ -167,12 +158,7 @@
         }
 
         .card:hover { transform: translateY(-2px); border-color: var(--text-muted); }
-        
-        .card.selected {
-            border-color: var(--accent-red);
-            background-color: #2a1a1a;
-        }
-
+        .card.selected { border-color: var(--accent-red); background-color: #2a1a1a; }
         .card.selected::after {
             content: "SELECTED";
             position: absolute;
@@ -184,10 +170,10 @@
             border-radius: 4px;
         }
 
-        /* MINI CARDS (MANDATORY) */
+        /* MANDATORY CARDS */
         .card.mandatory {
             border-color: var(--accent-red);
-            opacity: 0.9;
+            opacity: 0.95;
             cursor: default;
             background-color: #2a1a1a;
         }
@@ -198,7 +184,17 @@
             color: #aaa;
         }
 
-        .card-title { font-weight: bold; margin-bottom: 10px; display: block; }
+        /* TYPOGRAPHY IN CARDS */
+        .card-title-link {
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+            color: var(--link-color);
+            text-decoration: none;
+            pointer-events: all; /* Ensure click passes through */
+        }
+        .card-title-link:hover { text-decoration: underline; }
+        
         .card-desc { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px; line-height: 1.4; }
         .card-value { font-weight: bold; color: var(--accent-red); font-size: 1.1rem; }
         .card-multiplier { font-size: 0.8rem; color: var(--text-muted); font-weight: normal; margin-left: 5px;}
@@ -248,7 +244,7 @@
         </div>
     </div>
 
-    <h3 class="section-header">Taxpayer Burdens (Everyone pays this)</h3>
+    <h3 class="section-header">Taxpayer Waste (Everyone pays this)</h3>
     <div id="mandatory-container" class="cards-grid"></div>
 
     <h3 class="section-header">Select what applies to you:</h3>
@@ -262,22 +258,44 @@
     let currentTotal = 0;
     const AVERAGE_LOSS_AMT = 2250;
 
-    // --- 1. MANDATORY "MINI" CARDS ---
+    // --- 1. MANDATORY "WASTE" CARDS ---
+    // These are locked. Values are estimated household share of the total waste.
     const mandatoryCards = [
         {
-            title: "Beer Store Contract Break",
+            title: "407 Penalty Forgiveness",
+            description: "Ford Gov declined to collect a $1B penalty from 407 ETR for low traffic.",
+            value: 200, 
+            url: "https://www.ontariondp.ca/news/auditor-general-will-investigate-ford-s-1-billion-write-hwy-407-company-ndp"
+        },
+        {
+            title: "Science Centre Move",
+            description: "Relocation to Ontario Place estimated to cost $400M+ more than renovation.",
+            value: 75,
+            url: "https://globalnews.ca/news/10899041/ontario-science-centre-relocation-cost/"
+        },
+        {
+            title: "Beer Store Break",
             description: "Penalty for breaking the Master Framework Agreement early ($225M cost).",
-            value: 40 
+            value: 40,
+            url: "https://globalnews.ca/news/11535990/ontario-beer-store-full-payment-225-million/"
         },
         {
             title: "Green Energy Cancellations",
             description: "Cost of cancelling 750+ renewable energy contracts ($231M cost).",
-            value: 45
+            value: 45,
+            url: "https://financialpost.com/commodities/energy/doug-fords-cancellation-of-green-energy-deals-costs-ontario-taxpayers-231m"
+        },
+        {
+            title: "Partisan Ads",
+            description: "Record-breaking $43M gov't ad spend; Auditor General deemed $16M partisan.",
+            value: 12,
+            url: "https://www.thetrillium.ca/news/politics/ontario-sets-highest-ever-government-advertising-spending-record-11566846"
         },
         {
             title: "Greenbelt Legal Scandal",
             description: "Legal fees, consultation, and reversal costs borne by taxpayers.",
-            value: 30
+            value: 30,
+            url: "https://www.cbc.ca/news/canada/toronto/greenbelt-reversal-ford-government-1.6973802"
         }
     ];
 
@@ -288,49 +306,48 @@
             title: "Renter (Post-2018 Unit)",
             description: "No rent control on new units. Est. extra cost vs rent-controlled unit.",
             value: 2400,
-            isPerChild: false 
+            isPerChild: false,
+            url: "https://www.cbc.ca/news/canada/toronto/rent-control-ontario-ford-government-1.6666736"
         },
         {
             id: "university",
             title: "University Student",
             description: "OSAP grant cuts & grace period elimination.",
             value: 2800,
-            isPerChild: true
+            isPerChild: true,
+            url: "https://www.cbc.ca/news/canada/toronto/osap-changes-ontario-student-assistance-program-1.4981604"
         },
         {
             id: "autism",
             title: "Child with Autism",
-            description: "Funding cap vs previous needs-based therapy costs.",
+            description: "Funding cap ($5k/yr) vs previous needs-based therapy costs.",
             value: 45000,
-            isPerChild: true
-        },
-        {
-            id: "nurse",
-            title: "Public Sector/Nurse",
-            description: "Bill 124 wage suppression (capped at 1%) vs inflation.",
-            value: 6500,
-            isPerChild: false
+            isPerChild: true,
+            url: "https://www.cbc.ca/news/canada/toronto/autism-program-changes-waitlist-1.7107198"
         },
         {
             id: "private_clinic",
             title: "Used Private Clinic",
             description: "Out-of-pocket upsell costs (cataracts, etc).",
             value: 500,
-            isPerChild: false
+            isPerChild: false,
+            url: "https://www.cbc.ca/news/health/cataract-surgery-upselling-private-clinics-1.7106093"
         },
         {
             id: "legal_aid",
             title: "Need Legal Aid",
-            description: "Cuts to Legal Aid Ontario budget.",
+            description: "30% cut to Legal Aid Ontario budget.",
             value: 1500,
-            isPerChild: false
+            isPerChild: false,
+            url: "https://www.cbc.ca/news/canada/toronto/legal-aid-ontario-cuts-1.5173735"
         },
         {
             id: "ev_charger",
             title: "Removed EV Charger",
             description: "Cancellation of EV station rebate.",
             value: 1000,
-            isPerChild: false
+            isPerChild: false,
+            url: "https://www.cbc.ca/news/canada/toronto/electric-vehicle-incentive-scrapped-1.4744416"
         }
     ];
 
@@ -361,13 +378,20 @@
         return '$' + num.toLocaleString('en-CA', {maximumFractionDigits: 0});
     }
 
+    // Function to stop click propagation so clicking the link doesn't toggle the card
+    window.openLink = function(e, url) {
+        e.stopPropagation(); // Prevents card toggle
+        window.open(url, '_blank');
+    }
+
     function renderMandatory() {
         els.mandatoryGrid.innerHTML = '';
         mandatoryCards.forEach(card => {
             const div = document.createElement('div');
             div.className = 'card mandatory selected';
+            // Note: Mandatory cards aren't clickable toggles, so the link is just a standard link
             div.innerHTML = `
-                <span class="card-title">${card.title}</span>
+                <a href="${card.url}" target="_blank" class="card-title-link">${card.title}</a>
                 <div class="card-desc">${card.description}</div>
                 <div class="card-value">-${formatCurrency(card.value)}</div>
             `;
@@ -381,13 +405,15 @@
             const div = document.createElement('div');
             const isSelected = state.selectedIds.has(card.id);
             div.className = `card ${isSelected ? 'selected' : ''}`;
+            // The card toggle happens on the main div click
             div.onclick = () => toggle(card.id);
             
             let valueText = `-${formatCurrency(card.value)}`;
             if (card.isPerChild) valueText += ` <span class="card-multiplier">per child</span>`;
 
+            // The onclick="openLink" prevents the card from toggling when you just want to read the article
             div.innerHTML = `
-                <span class="card-title">${card.title}</span>
+                <span class="card-title-link" onclick="openLink(event, '${card.url}')">${card.title} <span style="font-size:0.7em">🔗</span></span>
                 <div class="card-desc">${card.description}</div>
                 <div class="card-value">${valueText}</div>
             `;
@@ -416,7 +442,6 @@
             }
         });
 
-        // Save for export
         currentTotal = total;
 
         // --- UPDATE UI ---
@@ -424,19 +449,11 @@
         els.total.className = isNegative ? 'negative' : 'positive';
         els.total.innerText = (isNegative ? '-' : '+') + formatCurrency(Math.abs(total));
 
-        // Update Label Text
-        if (isNegative) {
-            els.label.innerText = "Doug Ford cost you:";
-        } else {
-            els.label.innerText = "Doug Ford has saved you:";
-        }
+        // Update Label
+        els.label.innerText = isNegative ? "Doug Ford cost you:" : "Doug Ford has saved you:";
 
-        // Show/Hide Average Message
-        if (!isNegative) {
-            els.msg.style.display = 'block';
-        } else {
-            els.msg.style.display = 'none';
-        }
+        // Show/Hide Average Msg
+        els.msg.style.display = isNegative ? 'none' : 'block';
     }
 
     function toggle(id) {
@@ -446,34 +463,28 @@
         calculateTotal();
     }
 
-    // --- SHARE FUNCTIONALITY ---
     window.copyResult = function() {
-        const link = window.location.href; // Gets current page URL
+        const link = window.location.href;
         let textToCopy = "";
 
         if (currentTotal < 0) {
-            // Negative (Cost to user)
             const cost = formatCurrency(Math.abs(currentTotal));
             textToCopy = `Doug Ford has cost my family ${cost} through his reckless spending and cuts to our province. Find out how much he's cost you: ${link}`;
         } else {
-            // Positive (Gain to user)
             const avgCost = formatCurrency(AVERAGE_LOSS_AMT);
             textToCopy = `Doug Ford has cost the average Ontario family ${avgCost} through his reckless spending and cuts to our province. Find out how much he's cost you: ${link}`;
         }
 
         navigator.clipboard.writeText(textToCopy).then(() => {
-            // Visual Feedback
             const originalText = els.shareBtn.innerText;
             els.shareBtn.innerText = "COPIED!";
             els.shareBtn.classList.add("copied");
-            
             setTimeout(() => {
                 els.shareBtn.innerText = originalText;
                 els.shareBtn.classList.remove("copied");
             }, 2000);
         }).catch(err => {
-            console.error('Failed to copy: ', err);
-            alert("Could not copy to clipboard automatically. Please screenshot instead.");
+            alert("Could not copy automatically. Please screenshot instead.");
         });
     }
 
