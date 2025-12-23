@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Ford Factor</title>
+    <style>
+        /* VISUAL STYLING */
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --accent-green: #4caf50;
+            --accent-red: #f44336;
+            --accent-orange: #ff9800;
+            --accent-blue: #2196F3;
+            --border-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0 20px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container { max-width: 800px; width: 100%; }
+
+        header { text-align: center; margin-top: 40px; margin-bottom: 20px; }
+        h1 { font-size: 2.5rem; margin-bottom: 10px; }
+        .subtitle { color: var(--text-muted); }
+
+        /* SCOREBOARD - STICKY */
+        .scoreboard-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: var(--bg-color);
+            padding-top: 20px;
+            padding-bottom: 20px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .scoreboard {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px 40px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .total-label { font-size: 1rem; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        #total-amount {
+            font-size: 4rem;
+            font-weight: bold;
+            margin: 0;
+            line-height: 1;
+        }
+
+        .positive { color: var(--accent-green); }
+        .negative { color: var(--accent-red); }
+
+        /* SHARE BUTTON */
+        .share-btn {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .share-btn:hover {
+            transform: scale(1.05);
+            background-color: #1976D2;
+        }
+
+        .share-btn:active { transform: scale(0.95); }
+
+        /* State when copied */
+        .share-btn.copied {
+            background-color: white;
+            color: var(--bg-color);
+        }
+
+        /* Average Message */
+        #average-msg {
+            margin-top: 15px;
+            background-color: #2a2a2a;
+            border: 1px solid var(--accent-orange);
+            color: var(--text-main);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: none; 
+        }
+
+        /* INPUTS */
+        .inputs-section {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+        .input-group { display: flex; flex-direction: column; }
+        label { margin-bottom: 8px; font-weight: bold; color: var(--text-muted); font-size: 0.9rem; }
+        input[type="number"] {
+            background-color: #2c2c2c;
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        /* SECTION HEADERS */
+        .section-header {
+            margin-bottom: 15px;
+            margin-top: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* CARDS GRID */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+            position: relative;
+            user-select: none;
+        }
+
+        .card:hover { transform: translateY(-2px); border-color: var(--text-muted); }
+        
+        .card.selected {
+            border-color: var(--accent-red);
+            background-color: #2a1a1a;
+        }
+
+        .card.selected::after {
+            content: "SELECTED";
+            position: absolute;
+            top: 10px; right: 10px;
+            font-size: 0.7rem;
+            background-color: var(--accent-red);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* MINI CARDS (MANDATORY) */
+        .card.mandatory {
+            border-color: var(--accent-red);
+            opacity: 0.9;
+            cursor: default;
+            background-color: #2a1a1a;
+        }
+        .card.mandatory:hover { transform: none; }
+        .card.mandatory::after {
+            content: "LOCKED";
+            background-color: #444;
+            color: #aaa;
+        }
+
+        .card-title { font-weight: bold; margin-bottom: 10px; display: block; }
+        .card-desc { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px; line-height: 1.4; }
+        .card-value { font-weight: bold; color: var(--accent-red); font-size: 1.1rem; }
+        .card-multiplier { font-size: 0.8rem; color: var(--text-muted); font-weight: normal; margin-left: 5px;}
+
+        @media (max-width: 600px) {
+            .inputs-section { grid-template-columns: 1fr; }
+            #total-amount { font-size: 3rem; }
+            .scoreboard { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>The Ford Factor</h1>
+        <p class="subtitle">Calculate the net impact of provincial policies on your wallet.</p>
+    </header>
+
+    <div class="scoreboard-wrapper">
+        <div class="scoreboard">
+            <div id="score-label" class="total-label">Doug Ford has saved you:</div>
+            <div id="total-amount" class="positive">$0</div>
+            
+            <button id="share-btn" class="share-btn" onclick="copyResult()">
+                Share Result
+            </button>
+        </div>
+        
+        <div id="average-msg">
+            Good for you! But the average family is out <strong>$2,250</strong> per year.
+        </div>
+    </div>
+
+    <div class="inputs-section">
+        <div class="input-group">
+            <label for="income">Annual Income ($)</label>
+            <input type="number" id="income" value="55000" step="1000">
+        </div>
+        <div class="input-group">
+            <label for="cars"># of Cars</label>
+            <input type="number" id="cars" value="1" min="0">
+        </div>
+        <div class="input-group">
+            <label for="children"># of Children</label>
+            <input type="number" id="children" value="2" min="0">
+        </div>
+    </div>
+
+    <h3 class="section-header">Taxpayer Burdens (Everyone pays this)</h3>
+    <div id="mandatory-container" class="cards-grid"></div>
+
+    <h3 class="section-header">Select what applies to you:</h3>
+    <div id="cards-container" class="cards-grid">
+        <p style="color: red;">⚠️ Loading options...</p>
+    </div>
+</div>
+
+<script>
+    // GLOBAL STATE TRACKING
+    let currentTotal = 0;
+    const AVERAGE_LOSS_AMT = 2250;
+
+    // --- 1. MANDATORY "MINI" CARDS ---
+    const mandatoryCards = [
+        {
+            title: "Beer Store Contract Break",
+            description: "Penalty for breaking the Master Framework Agreement early ($225M cost).",
+            value: 40 
+        },
+        {
+            title: "Green Energy Cancellations",
+            description: "Cost of cancelling 750+ renewable energy contracts ($231M cost).",
+            value: 45
+        },
+        {
+            title: "Greenbelt Legal Scandal",
+            description: "Legal fees, consultation, and reversal costs borne by taxpayers.",
+            value: 30
+        }
+    ];
+
+    // --- 2. OPTIONAL CARDS ---
+    const cards = [
+        {
+            id: "rent_control",
+            title: "Renter (Post-2018 Unit)",
+            description: "No rent control on new units. Est. extra cost vs rent-controlled unit.",
+            value: 2400,
+            isPerChild: false 
+        },
+        {
+            id: "university",
+            title: "University Student",
+            description: "OSAP grant cuts & grace period elimination.",
+            value: 2800,
+            isPerChild: true
+        },
+        {
+            id: "autism",
+            title: "Child with Autism",
+            description: "Funding cap vs previous needs-based therapy costs.",
+            value: 45000,
+            isPerChild: true
+        },
+        {
+            id: "nurse",
+            title: "Public Sector/Nurse",
+            description: "Bill 124 wage suppression (capped at 1%) vs inflation.",
+            value: 6500,
+            isPerChild: false
+        },
+        {
+            id: "private_clinic",
+            title: "Used Private Clinic",
+            description: "Out-of-pocket upsell costs (cataracts, etc).",
+            value: 500,
+            isPerChild: false
+        },
+        {
+            id: "legal_aid",
+            title: "Need Legal Aid",
+            description: "Cuts to Legal Aid Ontario budget.",
+            value: 1500,
+            isPerChild: false
+        },
+        {
+            id: "ev_charger",
+            title: "Removed EV Charger",
+            description: "Cancellation of EV station rebate.",
+            value: 1000,
+            isPerChild: false
+        }
+    ];
+
+    // --- LOGIC ---
+    const STICKER_SAVING = 120; 
+    const GAS_TAX_SAVING_PER_CAR = 85; 
+
+    const state = {
+        income: 55000,
+        cars: 1,
+        children: 2,
+        selectedIds: new Set()
+    };
+
+    const els = {
+        income: document.getElementById('income'),
+        cars: document.getElementById('cars'),
+        children: document.getElementById('children'),
+        total: document.getElementById('total-amount'),
+        label: document.getElementById('score-label'),
+        msg: document.getElementById('average-msg'),
+        grid: document.getElementById('cards-container'),
+        mandatoryGrid: document.getElementById('mandatory-container'),
+        shareBtn: document.getElementById('share-btn')
+    };
+
+    function formatCurrency(num) {
+        return '$' + num.toLocaleString('en-CA', {maximumFractionDigits: 0});
+    }
+
+    function renderMandatory() {
+        els.mandatoryGrid.innerHTML = '';
+        mandatoryCards.forEach(card => {
+            const div = document.createElement('div');
+            div.className = 'card mandatory selected';
+            div.innerHTML = `
+                <span class="card-title">${card.title}</span>
+                <div class="card-desc">${card.description}</div>
+                <div class="card-value">-${formatCurrency(card.value)}</div>
+            `;
+            els.mandatoryGrid.appendChild(div);
+        });
+    }
+
+    function renderOptions() {
+        els.grid.innerHTML = '';
+        cards.forEach(card => {
+            const div = document.createElement('div');
+            const isSelected = state.selectedIds.has(card.id);
+            div.className = `card ${isSelected ? 'selected' : ''}`;
+            div.onclick = () => toggle(card.id);
+            
+            let valueText = `-${formatCurrency(card.value)}`;
+            if (card.isPerChild) valueText += ` <span class="card-multiplier">per child</span>`;
+
+            div.innerHTML = `
+                <span class="card-title">${card.title}</span>
+                <div class="card-desc">${card.description}</div>
+                <div class="card-value">${valueText}</div>
+            `;
+            els.grid.appendChild(div);
+        });
+    }
+
+    function calculateTotal() {
+        // --- GAINS ---
+        const generalTaxCut = state.income * 0.01;
+        let liftCredit = 0;
+        if (state.income < 50000) {
+             if (state.income < 30000) liftCredit = 875; 
+             else liftCredit = Math.round(875 * ((50000 - state.income) / 20000));
+        }
+        const carSavings = (state.cars * STICKER_SAVING) + (state.cars * GAS_TAX_SAVING_PER_CAR);
+        let total = generalTaxCut + liftCredit + carSavings;
+
+        // --- LOSSES ---
+        mandatoryCards.forEach(c => total -= c.value);
+        cards.forEach(card => {
+            if (state.selectedIds.has(card.id)) {
+                let cost = card.value;
+                if (card.isPerChild) cost = cost * Math.max(1, state.children);
+                total -= cost;
+            }
+        });
+
+        // Save for export
+        currentTotal = total;
+
+        // --- UPDATE UI ---
+        const isNegative = total < 0;
+        els.total.className = isNegative ? 'negative' : 'positive';
+        els.total.innerText = (isNegative ? '-' : '+') + formatCurrency(Math.abs(total));
+
+        // Update Label Text
+        if (isNegative) {
+            els.label.innerText = "Doug Ford cost you:";
+        } else {
+            els.label.innerText = "Doug Ford has saved you:";
+        }
+
+        // Show/Hide Average Message
+        if (!isNegative) {
+            els.msg.style.display = 'block';
+        } else {
+            els.msg.style.display = 'none';
+        }
+    }
+
+    function toggle(id) {
+        if (state.selectedIds.has(id)) state.selectedIds.delete(id);
+        else state.selectedIds.add(id);
+        renderOptions();
+        calculateTotal();
+    }
+
+    // --- SHARE FUNCTIONALITY ---
+    window.copyResult = function() {
+        const link = window.location.href; // Gets current page URL
+        let textToCopy = "";
+
+        if (currentTotal < 0) {
+            // Negative (Cost to user)
+            const cost = formatCurrency(Math.abs(currentTotal));
+            textToCopy = `Doug Ford has cost my family ${cost} through his reckless spending and cuts to our province. Find out how much he's cost you: ${link}`;
+        } else {
+            // Positive (Gain to user)
+            const avgCost = formatCurrency(AVERAGE_LOSS_AMT);
+            textToCopy = `Doug Ford has cost the average Ontario family ${avgCost} through his reckless spending and cuts to our province. Find out how much he's cost you: ${link}`;
+        }
+
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            // Visual Feedback
+            const originalText = els.shareBtn.innerText;
+            els.shareBtn.innerText = "COPIED!";
+            els.shareBtn.classList.add("copied");
+            
+            setTimeout(() => {
+                els.shareBtn.innerText = originalText;
+                els.shareBtn.classList.remove("copied");
+            }, 2000);
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+            alert("Could not copy to clipboard automatically. Please screenshot instead.");
+        });
+    }
+
+    // Listeners
+    els.income.addEventListener('input', (e) => { state.income = Number(e.target.value); calculateTotal(); });
+    els.cars.addEventListener('input', (e) => { state.cars = Number(e.target.value); calculateTotal(); });
+    els.children.addEventListener('input', (e) => { state.children = Number(e.target.value); calculateTotal(); });
+
+    // Start
+    window.addEventListener('DOMContentLoaded', () => {
+        renderMandatory();
+        renderOptions();
+        calculateTotal();
+    });
+
+</script>
+</body>
+</html>
