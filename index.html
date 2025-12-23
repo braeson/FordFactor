@@ -225,7 +225,7 @@
         </div>
         
         <div id="average-msg">
-            Good for you! But the average family is out <strong>$2,250</strong> per year.
+            Good for you! But the average family is out <strong>$3,750</strong> per year.
         </div>
     </div>
 
@@ -249,107 +249,17 @@
 
     <h3 class="section-header">Select what applies to you:</h3>
     <div id="cards-container" class="cards-grid">
-        <p style="color: red;">⚠️ Loading options...</p>
+        <p style="color: red;">⚠️ Loading options... Ensure 'cards.js' is in the same folder.</p>
     </div>
 </div>
 
+<script src="cards.js"></script>
+
 <script>
-    // GLOBAL STATE TRACKING
+    // --- GLOBAL STATE ---
     let currentTotal = 0;
-    const AVERAGE_LOSS_AMT = 2250;
-
-    // --- 1. MANDATORY "WASTE" CARDS ---
-    // These are locked. Values are estimated household share of the total waste.
-    const mandatoryCards = [
-        {
-            title: "407 Penalty Forgiveness",
-            description: "Ford Gov declined to collect a $1B penalty from 407 ETR for low traffic.",
-            value: 200, 
-            url: "https://www.ontariondp.ca/news/auditor-general-will-investigate-ford-s-1-billion-write-hwy-407-company-ndp"
-        },
-        {
-            title: "Science Centre Move",
-            description: "Relocation to Ontario Place estimated to cost $400M+ more than renovation.",
-            value: 75,
-            url: "https://globalnews.ca/news/10899041/ontario-science-centre-relocation-cost/"
-        },
-        {
-            title: "Beer Store Break",
-            description: "Penalty for breaking the Master Framework Agreement early ($225M cost).",
-            value: 40,
-            url: "https://globalnews.ca/news/11535990/ontario-beer-store-full-payment-225-million/"
-        },
-        {
-            title: "Green Energy Cancellations",
-            description: "Cost of cancelling 750+ renewable energy contracts ($231M cost).",
-            value: 45,
-            url: "https://financialpost.com/commodities/energy/doug-fords-cancellation-of-green-energy-deals-costs-ontario-taxpayers-231m"
-        },
-        {
-            title: "Partisan Ads",
-            description: "Record-breaking $43M gov't ad spend; Auditor General deemed $16M partisan.",
-            value: 12,
-            url: "https://www.thetrillium.ca/news/politics/ontario-sets-highest-ever-government-advertising-spending-record-11566846"
-        },
-        {
-            title: "Greenbelt Legal Scandal",
-            description: "Legal fees, consultation, and reversal costs borne by taxpayers.",
-            value: 30,
-            url: "https://www.cbc.ca/news/canada/toronto/greenbelt-reversal-ford-government-1.6973802"
-        }
-    ];
-
-    // --- 2. OPTIONAL CARDS ---
-    const cards = [
-        {
-            id: "rent_control",
-            title: "Renter (Post-2018 Unit)",
-            description: "No rent control on new units. Est. extra cost vs rent-controlled unit.",
-            value: 2400,
-            isPerChild: false,
-            url: "https://www.cbc.ca/news/canada/toronto/rent-control-ontario-ford-government-1.6666736"
-        },
-        {
-            id: "university",
-            title: "University Student",
-            description: "OSAP grant cuts & grace period elimination.",
-            value: 2800,
-            isPerChild: true,
-            url: "https://www.cbc.ca/news/canada/toronto/osap-changes-ontario-student-assistance-program-1.4981604"
-        },
-        {
-            id: "autism",
-            title: "Child with Autism",
-            description: "Funding cap ($5k/yr) vs previous needs-based therapy costs.",
-            value: 45000,
-            isPerChild: true,
-            url: "https://www.cbc.ca/news/canada/toronto/autism-program-changes-waitlist-1.7107198"
-        },
-        {
-            id: "private_clinic",
-            title: "Used Private Clinic",
-            description: "Out-of-pocket upsell costs (cataracts, etc).",
-            value: 500,
-            isPerChild: false,
-            url: "https://www.cbc.ca/news/health/cataract-surgery-upselling-private-clinics-1.7106093"
-        },
-        {
-            id: "legal_aid",
-            title: "Need Legal Aid",
-            description: "30% cut to Legal Aid Ontario budget.",
-            value: 1500,
-            isPerChild: false,
-            url: "https://www.cbc.ca/news/canada/toronto/legal-aid-ontario-cuts-1.5173735"
-        },
-        {
-            id: "ev_charger",
-            title: "Removed EV Charger",
-            description: "Cancellation of EV station rebate.",
-            value: 1000,
-            isPerChild: false,
-            url: "https://www.cbc.ca/news/canada/toronto/electric-vehicle-incentive-scrapped-1.4744416"
-        }
-    ];
+    // Updated average to reflect new mandatory items
+    const AVERAGE_LOSS_AMT = 3750; 
 
     // --- LOGIC ---
     const STICKER_SAVING = 120; 
@@ -378,18 +288,19 @@
         return '$' + num.toLocaleString('en-CA', {maximumFractionDigits: 0});
     }
 
-    // Function to stop click propagation so clicking the link doesn't toggle the card
+    // Prevents card toggle when clicking the link
     window.openLink = function(e, url) {
-        e.stopPropagation(); // Prevents card toggle
+        e.stopPropagation(); 
         window.open(url, '_blank');
     }
 
     function renderMandatory() {
+        if (typeof mandatoryCards === 'undefined') return; // Safety check
+        
         els.mandatoryGrid.innerHTML = '';
         mandatoryCards.forEach(card => {
             const div = document.createElement('div');
             div.className = 'card mandatory selected';
-            // Note: Mandatory cards aren't clickable toggles, so the link is just a standard link
             div.innerHTML = `
                 <a href="${card.url}" target="_blank" class="card-title-link">${card.title}</a>
                 <div class="card-desc">${card.description}</div>
@@ -400,18 +311,18 @@
     }
 
     function renderOptions() {
+        if (typeof cards === 'undefined') return; // Safety check
+
         els.grid.innerHTML = '';
         cards.forEach(card => {
             const div = document.createElement('div');
             const isSelected = state.selectedIds.has(card.id);
             div.className = `card ${isSelected ? 'selected' : ''}`;
-            // The card toggle happens on the main div click
             div.onclick = () => toggle(card.id);
             
             let valueText = `-${formatCurrency(card.value)}`;
             if (card.isPerChild) valueText += ` <span class="card-multiplier">per child</span>`;
 
-            // The onclick="openLink" prevents the card from toggling when you just want to read the article
             div.innerHTML = `
                 <span class="card-title-link" onclick="openLink(event, '${card.url}')">${card.title} <span style="font-size:0.7em">🔗</span></span>
                 <div class="card-desc">${card.description}</div>
@@ -422,6 +333,9 @@
     }
 
     function calculateTotal() {
+        // Safety check for data loading
+        if (typeof mandatoryCards === 'undefined' || typeof cards === 'undefined') return;
+
         // --- GAINS ---
         const generalTaxCut = state.income * 0.01;
         let liftCredit = 0;
@@ -494,7 +408,8 @@
     els.children.addEventListener('input', (e) => { state.children = Number(e.target.value); calculateTotal(); });
 
     // Start
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('load', () => {
+        // We use 'load' to ensure cards.js is ready
         renderMandatory();
         renderOptions();
         calculateTotal();
